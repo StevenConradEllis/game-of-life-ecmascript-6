@@ -1,0 +1,200 @@
+<!doctype html>
+<html class="no-js" lang="">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+
+        .grid-container {
+        }
+
+        .row:before,
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        [class*='col'] {
+            float: left;
+            min-height: 1px;
+            width: 8px;
+            height: 8px;
+            background-color: #FFFFFF;
+            border: 0px solid black;
+            color: #FFFFFF;
+        }
+
+        .col {
+            width: 8px;
+        }
+
+        .outline, .outline * {
+            outline: 0px solid #FFFFFF;
+        }
+
+
+    </style>
+
+
+</head>
+<body>
+
+<div id="grid" class="grid-container outline"></div>
+
+<script>
+
+    const counter = 5000; //the number of iterations you want to do
+    const rows = 100; //the number of rows you want in your grid
+    const recalcMilliSeconds = 500; //pause (in milliseconds) between grid re-calculations
+    const cols = 100; //the number of cells you want in your grid
+
+    let cells = new Map(); //this is an array of key-value pairs, containing a LifeCell object for every XY cell in the grid
+
+    class LifeCell {
+
+        constructor(x, y, active) {
+            this.x = x;
+            this.y = y;
+            this.alive = active;
+        }
+
+        getAliveOrDead() {
+            return this.alive;
+        }
+
+        setAliveOrDead(alive) {
+            this.alive = alive;
+        }
+
+        amIAliveOrDead() {
+
+            /*
+             This method calculates the number of live neighbours that a cell has
+             based on the following rules, the cell gets to live or die:
+             1. Any live cell with fewer than two live neighbours dies, as if caused by underpopulation.
+             2. Any live cell with two or three live neighbours lives on to the next generation.
+             3. Any live cell with more than three live neighbours dies, as if by overpopulation.
+             4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+             */
+
+            let aliveCount = 0;
+
+            //these two for loops retrieve the 8 neighbour cells of this cell
+            for (let x = -1; x <= 1; x++) {
+                for (let y = -1; y <= 1; y++) {
+
+                    let neighbourX = this.x + x;
+                    let neighbourY = this.y + y;
+
+                    //do not process if it's not a neighbour, (i.e. itself or off the grid)
+                    if ((x === 0 && y === 0) ||
+                        (neighbourX < 1
+                        || neighbourX > rows
+                        || neighbourY < 1
+                        || neighbourY > cols)) {
+
+                    } else {
+
+                        //is the neighbour cell dead or alive?
+                        let alive = cells.get(`X${neighbourX}Y${neighbourY}`).getAliveOrDead();
+                        //count up the number of live neighbours for this cell
+                        aliveCount += alive ? 1 : 0;
+                    }
+
+                }
+            }
+
+            if (this.alive && aliveCount < 2) {
+                this.alive = false; //rule 1!
+            }
+            if (this.alive && (aliveCount === 2 || aliveCount === 3)) {
+                //this cell gets to live on to the next generation - rule 2!
+            } else if (this.alive && aliveCount > 3) {
+                this.alive = false; //rule 3!
+            } else if (!this.alive && aliveCount === 3) {
+                this.alive = true; //rule 4!
+            }
+
+            return this.alive; //return the cell's new dead-alive status
+
+        }
+
+    }
+
+
+    function calculateGrid() {
+
+        let results = new Map();
+
+        //determine new dead-alive status for all cells, and store in the 'results' JS map
+        for (let a = 1;a <= rows;a++){
+            for (let b = 1; b <= cols; b++) {
+                results.set(`X${a}Y${b}`, cells.get(`X${a}Y${b}`).amIAliveOrDead());
+            }
+        }
+
+        //do another loop, retrieve the dead-alive status for each cell, update its status, color it correctly
+        for (let x = 1;x <= rows;x++){
+            for (let y = 1; y <= cols; y++) {
+                let alive = results.get(`X${x}Y${y}`);
+                cells.get(`X${x}Y${y}`).setAliveOrDead(alive);
+                document.getElementById(`X${x}Y${y}`).style.backgroundColor = (alive ? '#000000' : '#FFFFFF');
+            }
+
+        }
+
+        //re-run the calculations every x milliseconds
+        if (counter >= 0) setTimeout(calculateGrid, recalcMilliSeconds);
+
+
+    }
+
+    //this function is only called once, to initialize the grid
+    function setUpGrid() {
+
+        //initialize the cells grid with rows and columns
+        //each new cell has a 12% chance of being alive when initiated
+        for (let x = 1; x <= rows; x++) {
+            for (let y = 1; y <= cols; y++) {
+                cells.set(`X${x}Y${y}`, new LifeCell(x, y, Math.random() >= 0.88));
+            }
+        }
+
+        //generate a grid on the HTML page, according to the parameters set in the 'rows' and 'cols' global variables
+        let grid = document.getElementById('grid');
+        grid.innerHTML = '';
+
+        //the cell '[1,1]' is always situated in the bottom left of an X-Y graph.
+        // However, javascript creates the rows from top to bottom.
+        //This is who we decrement the x counter variable in the for-loop below
+        for (let x = rows; x >= 1; x--) {
+
+            let row = document.createElement('div');
+            row.className = 'row';
+
+            for (let y = 1; y <= cols; y++) {
+
+                let col = document.createElement('div');
+                col.className = "col";
+                col.id = `X${x}Y${y}`;
+                row.appendChild(col);
+
+            }
+            grid.appendChild(row);
+        }
+
+        calculateGrid(); //initiate the grid calculations once it is setup
+
+    }
+
+    setUpGrid();
+
+</script>
+
+</body>
+</html>
