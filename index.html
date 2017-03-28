@@ -25,7 +25,7 @@
             width: 8px;
             height: 8px;
             background-color: #FFFFFF;
-            border: 0px solid black;
+            border: 1px solid #EBEBEB;
             color: #FFFFFF;
         }
 
@@ -49,8 +49,8 @@
 <script>
 
     const counter = 5000; //the number of iterations you want to do
-    const rows = 100; //the number of rows you want in your grid
-    const cols = 100; //the number of cells you want in your grid
+    const rows = 200; //the number of rows you want in your grid
+    const cols = 200; //the number of cells you want in your grid
     const recalcMilliSeconds = 500; //pause (in milliseconds) between grid re-calculations
     
     let cells = new Map(); //this is an array of key-value pairs, containing a LifeCell object for every XY cell in the grid
@@ -165,7 +165,7 @@
         //each new cell has a 12% chance of being alive when initiated
         for (let x = 1; x <= rows; x++) {
             for (let y = 1; y <= cols; y++) {
-                cells.set(`X${x}Y${y}`, new LifeCell(x, y, Math.random() >= 0.88));
+                cells.set(`X${x}Y${y}`, new LifeCell(x, y, Math.random() >= 0.95));
             }
         }
 
